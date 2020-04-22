@@ -22,9 +22,18 @@ import {
   Subtract,
 } from 'grommet-icons'
 
+const RANDOM_PLAINTEXT = ['HACKISADISPLAYORIENTEDDUNGEONSDRAGONSLIKEGAMEBOTHDISPLAYANDCOMMANDSTRUCTURERESEMBLEROGUEFORAGAMEWITHTHESAMESTRUCTUREBUTENTIRELYDIFFERENTDISPLAYAREALCAVEINSTEADOFDULLRECTANGLESTRYQUESTTOGETSTARTEDYOUREALLYONLYNEEDTOKNOWTWOCOMMANDSTHECOMMANDWILLGIVEYOUALISTOFTHEAVAILABLECOMMANDSANDTHECOMMANDWILLIDENTIFYTHETHINGSYOUSEEONTHESCREENTOWINTHEGAMEASOPPOSEDTOMERELYPLAYINGTOBEATOTHERPEOPLEHIGHSCORESYOUMUSTLOCATETHEAMULETOFYENDORWHICHISSOMEWHEREBELOWTHETWENTIETHLEVELOFTHEDUNGEONANDGETITOUTNOBODYHASACHIEVEDTHISYETANDIFSOMEBODYDOESHEWILLPROBABLYGODOWNINHISTORYASAHEROAMONGHEROSWHENTHEGAMEENDSEITHERBYYOURDEATHWHENYOUQUITORIFYOUESCAPEFROMTHECAVESHACKWILLGIVEYOUAFRAGMENTOFTHELISTOFTOPSCORERSTHESCORINGISBASEDONMANYASPECTSOFYOURBEHAVIOURBUTAROUGHESTIMATEISOBTAINEDBYTAKINGTHEAMOUNTOFGOLDYOUVEFOUNDINTHECAVEPLUSFOURTIMESYOURREALEXPERIENCEPRECIOUSSTONESMAYBEWORTHALOTOFGOLDWHENBROUGHTTOTHEEXITTHEREISATENPERCENTPENALTYFORGETTINGYOURSELFKILLED',
+                          'THEMOSTNOTICEABLEEFFECTTHISCOMMUNICATIONHASONTHEGAMEISTHEDELAYINMOVINGSUPPOSEAPLAYERTYPESAMOVEFORHISSHIPANDHITSRETURNWHATHAPPENSTHENTHEPLAYERPROCESSSAVESUPMESSAGESTOBEWRITTENTOTHETEMPORARYFILEINABUFFEREVERYSEVENSECONDSORSOTHEPLAYERPROCESSGETSEXCLUSIVEACCESSTOTHETEMPORARYFILEANDWRITESOUTITSBUFFERTOTHEFILETHEDRIVERRUNNINGASYNCHRONOUSLYMUSTREADINTHEMOVEMENTCOMMANDPROCESSITANDWRITEOUTTHERESULTSTHISTAKESTWOEXCLUSIVEACCESSESTOTHETEMPORARYFILEFINALLYWHENTHEPLAYERPROCESSGETSAROUNDTODOINGANOTHERSEVENSECONDUPDATETHERESULTSOFTHEMOVEAREDISPLAYEDONTHESCREENHENCEEVERYMOVEMENTREQUIRESFOUREXCLUSIVEACCESSESTOTHETEMPORARYFILEANYWHEREFROMSEVENTOTWENTYONESECONDSDEPENDINGUPONASYNCHRONYBEFORETHEPLAYERSEESTHERESULTSOFHISMOVESAFTERTHEPLAYERWRITESOUTAFIRSTMOVEMENTMESSAGEASECONDMOVEMENTCOMMANDCANTHENBEISSUEDTHEFIRSTMESSAGEWILLBEINTHETEMPORARYFILEWAITINGFORTHEDRIVERANDTHESECONDWILLBEINTHEFILEBUFFERWAITINGTOBEWRITTENTOTHEFILETHUSBYALWAYSTYPINGMOVESATURNAHEADOFTHETIMETHEPLAYERCANSAILAROUNDQUITEQUICKLY',
+                          'IFYOUHAVENEVERPLAYEDSOLITAIREBEFOREITISRECOMMENDEDTHATYOUCONSULTASOLITAIREINSTRUCTIONBOOKINCANFIELDTABLEAUCARDSMAYBEBUILTONEACHOTHERDOWNWARDINALTERNATECOLORSANENTIREPILEMUSTBEMOVEDASAUNITINBUILDINGTOPCARDSOFTHEPILESAREAVAILABLETOBEPLAYEDONFOUNDATIONSBUTNEVERINTOEMPTYSPACESSPACESMUSTBEFILLEDFROMTHESTOCKTHETOPCARDOFTHESTOCKALSOISAVAILABLETOBEPLAYEDONFOUNDATIONSORBUILTONTABLEAUPILESAFTERTHESTOCKISEXHAUSTEDTABLEAUSPACESMAYBEFILLEDFROMTHETALONANDTHEPLAYERMAYKEEPTHEMOPENUNTILHEWISHESTOUSETHEMCARDSAREDEALTFROMTHEHANDTOTHETALONBYTHREESANDTHISREPEATSUNTILTHEREARENOMORECARDSINTHEHANDORTHEPLAYERQUITSTOHAVECARDSDEALTONTOTHETALONTHEPLAYERTYPESHTFORHISMOVEFOUNDATIONBASECARDSAREALSOAUTOMATICALLYMOVEDTOTHEFOUNDATIONWHENTHEYBECOMEAVAILABLE',
+                          'ROBOTSPITSYOUAGAINSTEVILROBOTSWHOARETRYINGTOKILLYOUWHICHISWHYTHEYAREEVILFORTUNATELYFORYOUEVENTHOUGHTHEYAREEVILTHEYARENOTVERYBRIGHTANDHAVEAHABITOFBUMPINGINTOEACHOTHERTHUSDESTROYINGTHEMSELVESINORDERTOSURVIVEYOUMUSTGETTHEMTOKILLEACHOTHEROFFSINCEYOUHAVENOOFFENSIVEWEAPONRYSINCEYOUARESTUCKWITHOUTOFFENSIVEWEAPONRYYOUAREENDOWEDWITHONEPIECEOFDEFENSIVEWEAPONRYATELEPORTATIONDEVICEWHENTWOROBOTSRUNINTOEACHOTHERORAJUNKPILETHEYDIEIFAROBOTRUNSINTOYOUYOUDIEWHENAROBOTDIESYOUGETTENPOINTSANDWHENALLTHEROBOTSDIEYOUSTARTONTHENEXTFIELDTHISKEEPSUPUNTILTHEYFINALLYGETYOUONLYFIVESCORESAREALLOWEDPERUSERONTHESCOREFILEIFYOUMAKEITINTOTHESCOREFILEYOUWILLBESHOWNTHELISTATTHEENDOFTHEGAMEIFANALTERNATESCOREFILEISSPECIFIEDTHATWILLBEUSEDINSTEADOFTHESTANDARDFILEFORSCORESY',
+                          'ATTHESTARTOFTHEFIRSTGAMETHEPROGRAMASKSTHEPLAYERTOCUTTHEDECKTODETERMINEWHOGETSTHEFIRSTCRIBTHEUSERSHOULDRESPONDWITHANUMBERBETWEENZEROANDFIFTYONEINDICATINGHOWMANYCARDSDOWNTHEDECKISTOBECUTTHEPLAYERWHOCUTSTHELOWERRANKEDCARDGETSTHEFIRSTCRIBIFMORETHANONEGAMEISPLAYEDTHELOSEROFTHEPREVIOUSGAMEGETSTHEFIRSTCRIBINTHECURRENTGAMEFOREACHHANDTHEPROGRAMFIRSTPRINTSTHEPLAYERSHANDWHOSECRIBITISANDTHENASKSTHEPLAYERTODISCARDTWOCARDSINTOTHECRIBTHECARDSAREPROMPTEDFORONEPERLINEANDARETYPEDASEXPLAINEDBELOWAFTERCUTTINGTHEDECKPLAYSTARTSWITHTHENONDEALERTHEPERSONWHODOESNTHAVETHECRIBLEADINGTHEFIRSTCARDPLAYCONTINUESASPERCRIBBAGEUNTILALLCARDSAREEXHAUSTEDTHEPROGRAMKEEPSTRACKOFTHESCORINGOFALLPOINTSANDTHETOTALOFTHECARDSONTHETABLEAFTERPLAYTHEHANDSARESCOREDTHEPROGRAMREQUESTSTHEPLAYERTOSCOREHISHANDANDTHECRIBIFITISHISBYPRINTINGOUTTHEAPPROPRIATECARDSANDTHECUTCARDENCLOSEDINBRACKETSPLAYCONTINUESUNTILONEPLAYERREACHESTHEGAMELIMITACARRIAGERETURNWHENANUMERICINPUTISEXPECTEDISEQUIVALENTTOTYPINGTHELOWESTLEGALVALUEWHENCUTTINGTHEDECKTHISISEQUIVALENTTOCHOOSINGTHETOPCARD'];
+
 const A_CODE = 65;
 const Z_CODE = 90;
+const ONE_CODE = 49;
+const NINE_CODE = 57;
 const NGRAM_SIZE = 5;
+const MAX_KEY_LEN = 9;
 const SPACE = ' ';
 
 const theme = {
@@ -39,6 +48,53 @@ const theme = {
     },
   },
 };
+
+/* ------------ flowchart --------- */
+
+function keyChart(size, fill) {
+}
+
+/* ------------ Display Table ------------- */
+
+function breakTableCell(data, onClick, fill = false) {
+  return (
+    <Box
+      onClick={onClick}
+      background={fill ? 'light-4': ''}
+    >
+      <Text alignSelf='center'>{data}</Text>
+    </Box>
+  );
+}
+
+function breakTable(data, onClick, fill) {
+  let body = [];
+  for(let i = 0; i < data.length; i++) {
+    let row =[]
+    for(let j = 0; j < data[i].length; j++) {
+      row.push(
+        <TableCell scope='row' verticalAlign='middle' border='all' pad='none'>
+          {breakTableCell(data[i][j], ()=>onClick(i, j), fill[i][j])}
+        </TableCell>
+      );
+    }
+    body.push(
+      <TableRow>
+        {row}
+      </TableRow>
+    );
+  }
+
+  return(
+    <Table>
+      <TableBody>
+        {body}
+      </TableBody>
+    </Table>
+  );
+}
+
+/* ------------- ---------*/
 
 function HomeGrid(props) { 
   return (
@@ -133,8 +189,10 @@ function BreakGrid(props) {
       margin='xlarge'
     >
       <Box gridArea='matrix' alignContent='center' justify='center'>
+        {breakTable(props.data, props.handleClickTable, props.tableFill)}
       </Box>
       <Box gridArea='permutation' alignContent='center' justify='center'> 
+        {keyChart(0,0)}
       </Box>
       <Box
         gridArea='period'
@@ -179,6 +237,9 @@ class App extends React.Component {
     this.state = {
       home: true,
       message: '',
+      displayMessage: '',
+      key: '',
+      displayKey: '',
     };
   }
 
@@ -198,6 +259,14 @@ class App extends React.Component {
     });
   }
 
+  updateKey(val) {
+    val = processKey(val);
+    this.setState({
+      key:val,
+      displayKey:val,
+    });
+  }
+
   /* ---------------- Home Page --------------- */
   
   handleBreak() {
@@ -208,8 +277,72 @@ class App extends React.Component {
     this.updateMessage(event.target.value);
   }
 
+  handleKeyEdit( event ) {
+    this.updateKey(event.target.value);
+  }
+
+  handleEncrypt() {
+    if(!this.state.key) {
+      return;
+    }
+    if(invalidKey(this.state.key)){
+      alert('ERROR: You have entered an invalid key. A valid key is between 2 and 9 numbers long, and contains each of ' +
+      'the numbers [1, length] exactly once.');
+      return;
+    }
+    this.updateMessage(encrypt(this.state.message, this.state.key));
+  }
+
+  handleDecrypt() {
+    if(!this.state.key) {
+      return;
+    }
+    if(invalidKey(this.state.key)){
+      alert('ERROR: You have entered an invalid key. A valid key is between 2 and 9 numbers long, and contains each of ' +
+      'the numbers [1, length] exactly once.');
+      return;
+    }
+    this.updateMessage(decrypt(this.state.message, this.state.key));
+  }
+
+  handleRandomPT() {
+    let newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
+    while( newMessage === this.state.message ) {
+      newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
+    }
+    this.updateMessage(newMessage);
+    this.updateKey('');
+  }
+
+  handleRandomCT() {
+    let newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
+    while( newMessage === this.state.message ) {
+      newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
+    }
+    let key = ''
+    let nums = [];
+    let keyLen = Math.floor(Math.random() * (MAX_KEY_LEN - 1)) + 2;
+    for( let i = 1; i <= keyLen; i++) {
+      nums.push(i);
+    }
+    nums = shuffle(nums);
+    for( let i = 0; i < keyLen; i++) {
+      key += '' + nums[i];
+    }
+    newMessage = encrypt(newMessage, key)
+    this.updateMessage(newMessage);
+    this.updateKey('');
+  }
+
   /* ---------------- Break Page -------------- */
 
+  handleClickTable(i, j) {
+    let str = ''
+    str += i;
+    str +=','
+    str+= j;
+    alert(str);
+  }
 
   /* ------------------ App ------------------- */
 
@@ -221,6 +354,12 @@ class App extends React.Component {
               handleBreak={() => this.handleBreak()}
               handleMessageEdit={event => this.handleMessageEdit(event)}
               displayMessage={this.state.displayMessage}
+              handleEncrypt={() => this.handleEncrypt()}
+              handleDecrypt={() => this.handleDecrypt()}
+              handleKeyEdit={event => this.handleKeyEdit(event)}
+              displayKey={this.state.displayKey}
+              handleRandomPT={() => this.handleRandomPT()}
+              handleRandomCT={() => this.handleRandomCT()}
             >
             </HomeGrid>
           </Box>
@@ -228,7 +367,11 @@ class App extends React.Component {
     } else {
         return(
           <Box width='large' alignSelf='center'>
-            <BreakGrid> 
+            <BreakGrid
+              data={[[1,2],[3,4]]}
+              handleClickTable={(i,j)=>this.handleClickTable(i,j)}
+              tableFill={[[false, true],[true,false]]}
+            > 
             </BreakGrid>
           </Box>
         );
@@ -244,6 +387,94 @@ class App extends React.Component {
       </Grommet>
     );
   }
+}
+
+/**
+ * Looks for incorrect keys
+ * @param {String} key 
+ */
+function invalidKey(key) {
+  if(key.length > MAX_KEY_LEN) {
+    return true;
+  }
+  let vals = Array(MAX_KEY_LEN);
+  for( let i = 0; i < key.length; i++) {
+    vals[parseInt(key.charAt(i))-1] = true; 
+  }
+  for( let i = 0; i < key.length; i++) {
+    if(!vals[i]) { 
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * decrypts the message with the key
+ * @param {String} message the message to be encrypted
+ * @param {String} key must be only numbers from 1 to 9, each number only used once 
+ */
+function decrypt(message, key) {
+  const period = key.length;
+  let array = Array(period);
+  for(let i = 0; i < period; i++) {
+    array[i] = [];
+  }
+  for(let i = 0; i < message.length; i++) {
+    array[i%period].push(message.charAt(i));
+  }
+  let encryptArray = Array(period);
+  for(let i = 0; i < key.length; i++) {
+    encryptArray[parseInt(key.charAt(i)) - 1] = array[i];
+  }
+  let output = '';
+  for(let i = 0; i < message.length; i++) {
+    output += encryptArray[i%period].shift();
+  }
+  return output;
+}
+
+/**
+ * encrypts the message with the key
+ * @param {String} message the message to be encrypted
+ * @param {String} key must be only numbers from 1 to 9, each number only used once 
+ */
+function encrypt(message, key) {
+  const period = key.length;
+  let array = Array(period);
+  for(let i = 0; i < period; i++) {
+    array[i] = [];
+  }
+  for(let i = 0; i < message.length; i++) {
+    array[i%period].push(message.charAt(i));
+  }
+  let encryptArray = [];
+  for(let i = 0; i < key.length; i++) {
+    encryptArray.push(array[parseInt(key.charAt(i)) - 1]);
+  }
+  let output = '';
+  for(let i = 0; i < message.length; i++) {
+    output += encryptArray[i%period].shift();
+  }
+  return output;
+}
+
+
+/**
+ * Converts message to upper case, removes all characters not in range [A,Z]
+ * @param {String} message the string to be processed
+ * @returns processed string
+ */
+function processKey(message) {
+  let output = '';
+  for(let i = 0; i < message.length; i++) {
+    //concat char to the end of output
+    let char = message.charCodeAt(i);
+    if( ONE_CODE <= char && char <= NINE_CODE ) {
+      output += message.charAt(i);
+    }
+  }
+  return output;
 }
 
 /**
@@ -280,6 +511,19 @@ function toNGram(message, n) {
     }
   }
   return output;
+}
+
+/**
+ * Credit to: https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+ * Shuffles array in place. ES6 version
+ * @param {Array} a items An array containing the items.
+ */
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
 
 export default App;
