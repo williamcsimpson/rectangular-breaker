@@ -34,6 +34,7 @@ const ONE_CODE = 49;
 const NINE_CODE = 57;
 const NGRAM_SIZE = 5;
 const MAX_KEY_LEN = 9;
+const MIN_KEY_LEN = 2;
 const SPACE = ' ';
 
 const theme = {
@@ -60,6 +61,7 @@ function breakTableCell(data, onClick, fill = false) {
   return (
     <Box
       onClick={onClick}
+      focusIndicator={false}
       background={fill ? 'light-4': ''}
     >
       <Text alignSelf='center'>{data}</Text>
@@ -240,6 +242,9 @@ class App extends React.Component {
       displayMessage: '',
       key: '',
       displayKey: '',
+      period: '',
+      data:[],
+      tableFill:[],
     };
   }
 
@@ -266,11 +271,44 @@ class App extends React.Component {
       displayKey:val,
     });
   }
+  
+  updatePeriod(val) {
+    if( MIN_KEY_LEN <= val && val <= MAX_KEY_LEN) {
+      this.setState({
+        period:val,
+        data:calculateTable(val, this.state.message),
+        tableFill:emptyTableFill(val),
+      });
+    }
+  }
+
+  updateTableSelection(i, j, val) {
+    let newTableFill = this.state.tableFill;
+    newTableFill[i][j] = val;
+    this.setState({
+      tableFill:newTableFill,
+    });
+  }
+
+  updateTableSelectionTrue(i, j) {
+    let newTableFill = this.state.tableFill;
+    for(let k = 0; k < newTableFill.length; k++) {
+      newTableFill[i][k] = false;
+      newTableFill[k][j] = false;
+    }
+    newTableFill[i][j] = true;
+    this.setState({
+      tableFill:newTableFill,
+    });
+  }
 
   /* ---------------- Home Page --------------- */
   
   handleBreak() {
     this.updateHome(!this.state.home);
+    this.updateKey('');
+    this.updatePeriod(MIN_KEY_LEN);
+
   }
 
   handleMessageEdit( event ) {
@@ -337,11 +375,32 @@ class App extends React.Component {
   /* ---------------- Break Page -------------- */
 
   handleClickTable(i, j) {
-    let str = ''
-    str += i;
-    str +=','
-    str+= j;
-    alert(str);
+    //deselect an item
+    if(this.state.tableFill[i][j]) {
+      this.updateTableSelection(i, j, false);
+      return;
+    }
+    let newGraph = Array(this.state.tableFill.length);
+    for(let  k = 0; k < newGraph.length; k++) {
+      newGraph[k] = [...this.state.tableFill[k]];
+    }
+    for(let k = 0; k < newGraph.length; k++) {
+      newGraph[i][k] = false;
+      newGraph[k][j] = false;
+    }
+    newGraph[i][j] = true;
+    if(containsCycle(newGraph)){
+      return;
+    }
+    this.updateTableSelectionTrue(i,j);
+  }
+
+  handlePeriodPlus() {
+    this.updatePeriod(this.state.period + 1);
+  }
+
+  handlePeriodMinus() {
+    this.updatePeriod(this.state.period - 1);
   }
 
   /* ------------------ App ------------------- */
@@ -368,9 +427,11 @@ class App extends React.Component {
         return(
           <Box width='large' alignSelf='center'>
             <BreakGrid
-              data={[[1,2],[3,4]]}
+              data={this.state.data}
               handleClickTable={(i,j)=>this.handleClickTable(i,j)}
-              tableFill={[[false, true],[true,false]]}
+              tableFill={this.state.tableFill}
+              handlePeriodPlus={() => this.handlePeriodPlus()}
+              handlePeriodMinus={() => this.handlePeriodMinus()}
             > 
             </BreakGrid>
           </Box>
@@ -387,6 +448,64 @@ class App extends React.Component {
       </Grommet>
     );
   }
+}
+
+
+/**
+ * Returns true if a graph contains a cycle, false otherwise
+ * @param {Array} graph 2d boolean array that represents a directed graph 
+ */
+function containsCycle(graph) {
+  let visited = Array(graph.length).fill(false);
+  let frontier = Array();
+  while( visited.includes(false) ) {
+    for(let i = 0; i < visited.length; i++) {
+      if(!visited[i]) {
+        frontier.push(i);
+        break;
+      }
+    }
+    let recentlyVisited = Array(graph.length).fill(false);
+    while(frontier.length > 0) {
+      const front = frontier.pop();
+      visited[front] = true;
+      recentlyVisited[front] = true;
+      for( let i = 0; i < visited.length; i++){
+        if(graph[front][i]){
+          if(recentlyVisited[i]) {
+            return true;
+          }
+          frontier.push(i);
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Fills a period x period table with false
+ * @param {Integer} period 
+ */
+function emptyTableFill(period) {
+  let output = Array(period);
+  for(let i = 0; i < period; i++) {
+    output[i] = Array(period).fill(false);
+  }
+  return output;
+}
+
+/**
+ * Calculates the table data with the given period and message
+ * @param {Integer} period 
+ * @param {String} message 
+ */
+function calculateTable(period, message) {
+  let output = Array(period);
+  for(let i = 0; i < period; i++) {
+    output[i] = Array(period).fill(0);
+  }
+  return output;
 }
 
 /**
