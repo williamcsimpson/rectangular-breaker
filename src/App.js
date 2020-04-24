@@ -223,7 +223,7 @@ function BreakGrid(props) {
         alignSelf='stretch'
       >
         <Button
-          label='Back'
+          label={props.validKey ? 'Confirm' : 'Back'}
           size='small'
           onClick={props.handleBack}
         />
@@ -245,10 +245,17 @@ class App extends React.Component {
       period: '',
       data:[],
       tableFill:[],
+      validKey:false,
     };
   }
 
   /* -------------- Change State -------------- */
+
+  updateValidKey(val) {
+    this.setState({
+      validKey:val,
+    });
+  }
 
   updateHome(val) {
     this.setState({
@@ -274,6 +281,12 @@ class App extends React.Component {
   
   updatePeriod(val) {
     if( MIN_KEY_LEN <= val && val <= MAX_KEY_LEN) {
+      let newKey = '';
+      for(let i = 1; i <= val; i++) {
+        newKey += i;
+      }
+      this.updateKey(newKey);
+      this.updateValidKey(false);
       this.setState({
         period:val,
         data:calculateTable(val, this.state.message),
@@ -285,6 +298,9 @@ class App extends React.Component {
   updateTableSelection(i, j, val) {
     let newTableFill = this.state.tableFill;
     newTableFill[i][j] = val;
+    let temp = countSelections(newTableFill) >= (this.state.key.length - 1);
+    this.updateValidKey(temp);
+    //this.updateValidKey(countSelections(newTableFill) >= (this.state.key.length - 1))
     this.setState({
       tableFill:newTableFill,
     });
@@ -297,6 +313,7 @@ class App extends React.Component {
       newTableFill[k][j] = false;
     }
     newTableFill[i][j] = true;
+    this.updateValidKey(countSelections(newTableFill) >= (this.state.key.length - 1))
     this.setState({
       tableFill:newTableFill,
     });
@@ -306,8 +323,8 @@ class App extends React.Component {
   
   handleBreak() {
     this.updateHome(!this.state.home);
-    this.updateKey('');
     this.updatePeriod(MIN_KEY_LEN);
+    this.updateValidKey(false);
 
   }
 
@@ -374,6 +391,18 @@ class App extends React.Component {
 
   /* ---------------- Break Page -------------- */
 
+  handleToHome() {
+    if(this.state.validKey) {
+        let newKey = getKeyFromGraph(this.state.tableFill);
+        newKey = invertKey(newKey);
+        this.updateKey(newKey);
+        this.updateMessage(decrypt(this.state.message, newKey));
+    } else {
+        this.updateKey('');
+    }
+    this.updateHome(!this.state.home);
+  }
+
   handleClickTable(i, j) {
     //deselect an item
     if(this.state.tableFill[i][j]) {
@@ -432,6 +461,8 @@ class App extends React.Component {
               tableFill={this.state.tableFill}
               handlePeriodPlus={() => this.handlePeriodPlus()}
               handlePeriodMinus={() => this.handlePeriodMinus()}
+              validKey={this.state.validKey}
+              handleBack={() => this.handleToHome()}
             > 
             </BreakGrid>
           </Box>
@@ -450,6 +481,66 @@ class App extends React.Component {
   }
 }
 
+function getKeyFromGraph(graph) {
+  let start = -1;
+  for(let j = 0; j < graph.length; j++) {
+    let colEmpty = true;
+    for(let i = 0; i < graph.length; i++) {
+      if(graph[i][j]) {
+        colEmpty = false;
+        break;
+      }
+    }
+    if(colEmpty) {
+      start = j;
+      break;
+    }
+  }
+
+  let key = '';
+  let stack = [];
+  stack.push(start);
+  while(stack.length > 0) {
+    let front = stack.pop();
+    key += (front + 1);
+    for(let j = 0; j < graph.length; j++) {
+      if(graph[front][j]) {
+        stack.push(j);
+      }
+    }
+  }
+
+  return key;
+}
+
+/**
+ * counts the number of trues in a 2d boolean array
+ * @param {Boolean[][]} arr 2d Boolean array 
+ */
+function countSelections(arr) {
+  let count = 0;
+  for(let i = 0; i < arr.length; i++) {
+    for(let j = 0; j < arr[i].length; j++) {
+      if(arr[i][j]) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+/**
+ * Inverts the given key
+ * @param {String} key 
+ */
+function invertKey(key) {
+  let newKey = ''
+  for(let i = 1; i <= key.length; i++) {
+    newKey += i;
+  }
+  newKey = decrypt(newKey, key);
+  return newKey;
+}
 
 /**
  * Returns true if a graph contains a cycle, false otherwise
@@ -547,8 +638,11 @@ function decrypt(message, key) {
     encryptArray[parseInt(key.charAt(i)) - 1] = array[i];
   }
   let output = '';
-  for(let i = 0; i < message.length; i++) {
-    output += encryptArray[i%period].shift();
+  for(let i = 0; i < message.length + period; i++) {
+    let char = '';
+    if(char = encryptArray[i%period].shift()  ) {
+      output += char;
+    }
   }
   return output;
 }
@@ -572,8 +666,11 @@ function encrypt(message, key) {
     encryptArray.push(array[parseInt(key.charAt(i)) - 1]);
   }
   let output = '';
-  for(let i = 0; i < message.length; i++) {
-    output += encryptArray[i%period].shift();
+  for(let i = 0; i < message.length + period; i++) {
+    let char = '';
+    if(char = encryptArray[i%period].shift()  ) {
+      output += char;
+    }
   }
   return output;
 }
