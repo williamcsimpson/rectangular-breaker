@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { 
   Box, 
   Button,
@@ -17,7 +18,54 @@ import {
   Add,
   Subtract,
 } from 'grommet-icons'
-import { act } from 'react-dom/test-utils';
+import {v4 as uuidv4} from "uuid";
+import Graph from "react-graph-vis";
+
+const GRAPH_WIDTH = 350;
+const GRAPH_HEIGHT = 350;
+
+const GRAPH_OPTIONS = {
+  layout: {
+    hierarchical: false
+  },
+  edges: {
+    color: "#000000"
+  },
+  manipulation: {
+  },
+  physics: {
+    enabled:false
+  },
+  interaction: {
+    dragNodes:false,
+    dragView: false, 
+    hoverConnectedEdges: false,
+    zoomView:false,
+    selectable:false
+  },
+  nodes:{
+  },
+  autoResize: true,
+  clickToUse: false,
+};
+
+  const RAD_IN_CIRCLE = Math.PI * 2;
+
+  const Agraph = {
+    nodes: [
+      { id: 1, label: "Node 1", title: "node 1 tootip text" },
+      { id: 2, label: "Node 2", title: "node 2 tootip text" },
+      { id: 3, label: "Node 3", title: "node 3 tootip text" },
+      { id: 4, label: "Node 4", title: "node 4 tootip text" },
+      { id: 5, label: "Node 5", title: "node 5 tootip text" }
+    ],
+    edges: [
+      { from: 1, to: 2 },
+      { from: 1, to: 3 },
+      { from: 2, to: 4 },
+      { from: 2, to: 5 }
+    ]
+  };
 
 const ENGLISH_BIGRAMS = [[11,193,388,469,20,100,233,20,480,20,103,1052,281,1878,8,222,0,1180,1001,1574,137,212,57,26,312,23],
                          [932,57,16,8,3220,0,0,0,605,57,0,1243,49,0,965,0,0,662,229,49,727,16,0,0,1165,0],
@@ -78,7 +126,31 @@ const theme = {
 
 /* ------------ flowchart --------- */
 
-function keyChart(size, fill) {
+function KeyChart(props) {
+  let nodeList = [];
+  for(let i = 1; i <= props.fill.length; i++) {
+    let rad = RAD_IN_CIRCLE / props.fill.length * i;
+    let xPos = Math.cos(rad) * (GRAPH_WIDTH/3) + (GRAPH_WIDTH / 2);
+    let yPos = Math.sin(rad) * (GRAPH_HEIGHT/3)+ (GRAPH_HEIGHT / 2);
+    nodeList.push({id:i, label:('' + i), color:'#228BE6', shape:'circle', x: xPos, y:yPos} );
+  }
+  let edgeList = [];
+  for(let i = 0; i < props.fill.length; i++) {
+    for(let j =0; j < props.fill.length; j++) {
+      if(props.fill[i][j]) {
+        edgeList.push({from:(i+1),to:(j+1)});
+      }
+    }
+  }
+  const graph = {
+    nodes: nodeList,
+    edges: edgeList
+  };
+  if(props.graphRef.current){
+  }
+      return(
+          <Graph key={uuidv4()} ref={props.graphRef} graph={graph} options={GRAPH_OPTIONS} style={{ width: GRAPH_WIDTH + "px", height: GRAPH_HEIGHT + "px" }} />
+      );
 }
 
 /* ------------ Display Table ------------- */
@@ -220,7 +292,10 @@ function BreakGrid(props) {
         {breakTable(props.data, props.handleClickTable, props.tableFill)}
       </Box>
       <Box gridArea='permutation' alignContent='center' justify='center'> 
-        {keyChart(0,0)}
+        <KeyChart 
+          fill={props.tableFill} 
+          graphRef={props.graphRef} 
+        />
       </Box>
       <Box
         gridArea='period'
@@ -272,6 +347,7 @@ class App extends React.Component {
       data:[],
       tableFill:[],
       validKey:false,
+      graphRef: React.createRef(),
     };
   }
 
@@ -489,6 +565,7 @@ class App extends React.Component {
               handlePeriodMinus={() => this.handlePeriodMinus()}
               validKey={this.state.validKey}
               handleBack={() => this.handleToHome()}
+              graphRef={this.state.graphRef}
             > 
             </BreakGrid>
           </Box>
@@ -574,7 +651,7 @@ function invertKey(key) {
  */
 function containsCycle(graph) {
   let visited = Array(graph.length).fill(false);
-  let frontier = Array();
+  let frontier = [];
   while( visited.includes(false) ) {
     for(let i = 0; i < visited.length; i++) {
       if(!visited[i]) {

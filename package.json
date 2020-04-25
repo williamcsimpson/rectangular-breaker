@@ -10,8 +10,11 @@
     "grommet-icons": "^4.4.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-graph-vis": "^1.0.5",
     "react-scripts": "3.4.1",
-    "styled-components": "^5.1.0"
+    "react-uuid": "^1.0.2",
+    "styled-components": "^5.1.0",
+    "vis-network": "^7.6.2"
   },
   "scripts": {
     "start": "react-scripts start",
