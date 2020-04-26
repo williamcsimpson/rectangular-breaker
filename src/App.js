@@ -20,6 +20,7 @@ import {
 } from 'grommet-icons'
 import {v4 as uuidv4} from "uuid";
 import Graph from "react-graph-vis";
+import ArticleText from './Article';
 
 const GRAPH_WIDTH = 300;
 const GRAPH_HEIGHT = 300;
@@ -163,10 +164,26 @@ function renderUIBox(i, isTop, text, onClick, focused) {
   );
 }
 
+function renderDisplayBox(i) {
+  return (
+    <Box
+      focusIndicator={false}
+      border='true'
+      alignContent='center'
+      justify='center'
+      align='center'
+    >
+      <Text>{i+1}</Text>
+    </Box>
+
+  );
+}
+
 
 function renderCol(i, eVal, dVal, onClick, eFocused, dFocused) {
   return(
     <Box>
+      {renderDisplayBox(i)}
       {renderUIBox(i, true, eVal, onClick, eFocused)}
       {renderUIBox(i, false, dVal, onClick, dFocused)}
     </Box>
@@ -176,6 +193,13 @@ function renderCol(i, eVal, dVal, onClick, eFocused, dFocused) {
 function renderLabel() {
   return(
     <Box>
+      <Box
+        border='true'
+        alignContent='center'
+        justify='center'
+      >
+        <Text>Original  Postition</Text>
+      </Box>
       <Box
         border='true'
         alignContent='center'
@@ -796,7 +820,10 @@ class App extends React.Component {
     return (
       <Grommet theme={theme} full>
         <Main>
+          <Box width='large' alignSelf='center'>
+          <ArticleText/>
           {this.renderPage()}
+          </Box>
         </Main>
       </Grommet>
     );
