@@ -12,6 +12,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  defaultProps,
 } from 'grommet';
 import {
   Add,
@@ -100,6 +101,10 @@ const NGRAM_SIZE = 5;
 const MAX_KEY_LEN = 9;
 const MIN_KEY_LEN = 2;
 const SPACE = ' ';
+const RIGHT_ARROW_CODE = 39;
+const LEFT_ARROW_CODE = 37;
+const BACKSPACE_CODE = 8;
+const DEL_CODE = 46;
 
 const theme = {
   global: {
@@ -113,6 +118,81 @@ const theme = {
     },
   },
 };
+
+const KEY_NO_VAL = '-';
+
+/* ----------- KeyDisplay ------------ */
+
+function KeyDisplay(props) {
+
+  let inverseArr = Array(props.keyArr.length).fill(KEY_NO_VAL);
+
+  for(let i = 0; i < props.keyArr.length; i++) {
+    if(props.keyArr[i] !== KEY_NO_VAL) {
+      inverseArr[props.keyArr[i] -1] = i +1; 
+    }
+  }
+
+  let key = [];
+  for(let i = 0; i < props.keyArr.length; i++) {
+    key.push(renderCol(i, props.keyArr[i], inverseArr[i], props.onClick, props.focusedRow == 0 && props.focusedCol == i, props.focusedRow == 1 && props.focusedCol == i));
+  }
+
+  return(
+    <Box direction='row'>
+      {renderLabel()}
+      {key}
+    </Box>
+  );
+}
+
+function renderUIBox(i, isTop, text, onClick, focused) {
+  return (
+    <Box
+      onClick={()=>(onClick(i, isTop))}
+      focusIndicator={false}
+      border='true'
+      alignContent='center'
+      justify='center'
+      align='center'
+      background={focused ? 'accent-1' : ''}
+    >
+      <Text>{text}</Text>
+    </Box>
+
+  );
+}
+
+
+function renderCol(i, eVal, dVal, onClick, eFocused, dFocused) {
+  return(
+    <Box>
+      {renderUIBox(i, true, eVal, onClick, eFocused)}
+      {renderUIBox(i, false, dVal, onClick, dFocused)}
+    </Box>
+  );
+}
+
+function renderLabel() {
+  return(
+    <Box>
+      <Box
+        border='true'
+        alignContent='center'
+        justify='center'
+      >
+        <Text>Encrypt Permutation</Text>
+      </Box>
+      <Box
+        border='true'
+        alignContent='center'
+        justify='center'
+      >
+        <Text>Decrypt Permutation</Text>
+      </Box>
+    </Box>
+  )
+}
 
 /* ------------ flowchart --------- */
 
@@ -190,15 +270,16 @@ function HomeGrid(props) {
   return (
     <Grid
       areas={[
-        { name: 'text', start: [0, 0], end: [3, 0] },
-        { name: 'key', start: [0, 1], end: [1, 1] },
-        { name: 'encrypt', start: [2, 2], end: [2, 2] },
-        { name: 'decrypt', start: [3, 2], end: [3, 2] },
-        { name: 'break', start: [1, 2], end: [1, 2] },
-        { name: 'randPT', start: [2, 1], end: [2, 1] },
-        { name: 'randCT', start: [3, 1], end: [3, 1] },
+        { name: 'text', start: [0, 0], end: [4, 0] },
+        { name: 'key', start: [0, 1], end: [2, 1] },
+        { name: 'keyLen', start: [3, 1], end: [4, 1] },
+        { name: 'encrypt', start: [1, 2], end: [1, 2] },
+        { name: 'decrypt', start: [2, 2], end: [2, 2] },
+        { name: 'break', start: [0, 2], end: [0, 2] },
+        { name: 'randPT', start: [3, 2], end: [3, 2] },
+        { name: 'randCT', start: [4, 2], end: [4, 2] },
       ]}
-      columns={['auto', 'auto', 'auto', 'auto']}
+      columns={['auto', 'auto', 'auto', 'auto', 'auto']}
       rows={['medium', 'xxsmall', 'xxsmall']}
       gap='small'
       margin='xlarge'
@@ -213,15 +294,34 @@ function HomeGrid(props) {
           name='TextInput'
           spellCheck='false'
           focus={false}
+          onClick={props.handleSelectMessage}
         />
       </Box>
       <Box gridArea='key'>
-        <TextInput
-          onChange = {props.handleKeyEdit}
-          value = {props.displayKey}
-          placeholder='Type key here...'
-          spellCheck='false'
-          focus={false}
+        <KeyDisplay
+          keyArr={props.keyArr}
+          focusedRow={props.activeRow}
+          focusedCol={props.activeCol}
+          onClick={props.handleKeyDisplayClick}
+        />
+      </Box>
+      <Box
+        gridArea='keyLen'
+        direction='row'
+        align='baseline'
+        alignContent='around'
+        alignSelf='stretch'
+      >
+        <Text>Period:</Text>
+        <Button
+          icon={<Subtract size='small' />}
+          size='small'
+          onClick={props.handlePeriodMinus}
+        />
+        <Button
+          icon={<Add size='small'/>}
+          size='small'
+          onClick={props.handlePeriodPlus}
         />
       </Box>
       <Box gridArea='encrypt'>
@@ -328,6 +428,8 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
+    document.addEventListener('keyup', (event) => this.onKeyPress(event))
+
     this.state = {
       home: true,
       message: '',
@@ -339,6 +441,9 @@ class App extends React.Component {
       tableFill:[],
       validKey:false,
       graphRef: React.createRef(),
+      activeRow:-1,
+      activeCol:-1,
+      keyArr: ['-','-'],
     };
   }
 
@@ -412,9 +517,103 @@ class App extends React.Component {
     });
   }
 
+  updateActiveSelection( col, row) {
+    this.setState({
+      activeRow:row,
+      activeCol:col
+    })
+  }
+
+  updateKeyArr( val, idx) {
+    let newKeyArr = this.state.keyArr;
+    if(0 > val || val > newKeyArr.length || idx >= newKeyArr.length || idx < 0){
+      return;
+    }
+    for(let i = 0; i < newKeyArr.length; i++) {
+      if(newKeyArr[i] === val) {
+        newKeyArr[i] = KEY_NO_VAL;
+      }
+    }
+    newKeyArr[idx] = val;
+    this.setState({
+      keyArr:newKeyArr,
+    });
+    this.updateActiveSelection((this.state.activeCol + 1 + this.state.keyArr.length) % this.state.keyArr.length, this.state.activeRow)
+  }
+
+  clearKeyArrIdx(idx) {
+    let newKeyArr = this.state.keyArr;
+    if(idx >= newKeyArr.length || idx < 0){
+      return;
+    }
+    newKeyArr[idx] = KEY_NO_VAL;
+    this.setState({
+      keyArr:newKeyArr,
+    });
+    this.updateActiveSelection((this.state.activeCol - 1 + this.state.keyArr.length) % this.state.keyArr.length, this.state.activeRow)
+  }
+
+  updateKeyPeriod( len ) {
+    this.clearFocus();
+    if( MIN_KEY_LEN <= len && len <= MAX_KEY_LEN ) {
+      this.setState({
+        keyArr:Array(len).fill(KEY_NO_VAL),
+      });
+    }
+  }
+
+  clearFocus() {
+    this.updateActiveSelection(-1,-1);    
+  }
+
+  updateKeyDisplay(key) {
+    let newKeyArr = Array(key.length).fill(KEY_NO_VAL);
+    for(let i = 0; i < key.length; i++) {
+      newKeyArr[i] = key.charAt(i);
+    }
+    this.setState({
+      keyArr: newKeyArr
+    });
+  }
+
   /* ---------------- Home Page --------------- */
+
+  onKeyPress(event) {
+    if(this.state.home) {
+      if(this.state.activeRow >= 0 && this.state.activeCol >= 0 ) {
+        if( ONE_CODE <= event.which && event.which <= NINE_CODE) {
+          if(this.state.activeRow === 0) {
+              this.updateKeyArr(event.which - ONE_CODE + 1, this.state.activeCol)
+          } else {
+              this.updateKeyArr(this.state.activeCol + 1, event.which - ONE_CODE)
+          }
+        } else if(event.which === DEL_CODE || event.which === BACKSPACE_CODE) {
+            if(this.state.activeRow === 0) {
+                this.clearKeyArrIdx(this.state.activeCol);
+            } else {
+                let idx = -1;
+                for(let i = 0; i < this.state.keyArr.length; i++) {
+                  if(this.state.keyArr[i] == this.state.activeCol + 1) {
+                    idx = i;
+                  }
+                }
+                this.clearKeyArrIdx(idx);
+            }
+        } else if(event.which === LEFT_ARROW_CODE) {
+            this.updateActiveSelection((this.state.activeCol + 1 + this.state.keyArr.length) % this.state.keyArr.length, this.state.activeRow)
+        } else if(event.which === RIGHT_ARROW_CODE) {
+            this.updateActiveSelection((this.state.activeCol - 1 + this.state.keyArr.length) % this.state.keyArr.length, this.state.activeRow)
+        }
+      }
+    }
+  }
+
+  handleKeyDisplayClick( idx, isTop ) {
+    this.updateActiveSelection(idx, isTop ? 0 : 1);
+  } 
   
   handleBreak() {
+    this.clearFocus();
     this.updateHome(!this.state.home);
     this.updatePeriod(MIN_KEY_LEN);
     this.updateValidKey(false);
@@ -430,30 +629,40 @@ class App extends React.Component {
   }
 
   handleEncrypt() {
-    if(!this.state.key) {
+    this.clearFocus();
+    let key = '';
+    for(let i = 0; i < this.state.keyArr.length; i++) {
+      key += this.state.keyArr[i];
+    }
+    if(!key) {
       return;
     }
-    if(invalidKey(this.state.key)){
-      alert('ERROR: You have entered an invalid key. A valid key is between 2 and 9 numbers long, and contains each of ' +
-      'the numbers [1, length] exactly once.');
+    if(invalidKey(key)){
       return;
     }
-    this.updateMessage(encrypt(this.state.message, this.state.key));
+    this.updateKey(key);
+    this.updateMessage(encrypt(this.state.message, key));
   }
 
   handleDecrypt() {
-    if(!this.state.key) {
+    this.clearFocus();
+    let key = '';
+    for(let i = 0; i < this.state.keyArr.length; i++) {
+      key += this.state.keyArr[i];
+    }
+    if(!key) {
       return;
     }
-    if(invalidKey(this.state.key)){
-      alert('ERROR: You have entered an invalid key. A valid key is between 2 and 9 numbers long, and contains each of ' +
-      'the numbers [1, length] exactly once.');
+    if(invalidKey(key)){
       return;
     }
-    this.updateMessage(decrypt(this.state.message, this.state.key));
+    this.updateKey(key);
+    this.updateMessage(decrypt(this.state.message, key));
   }
 
   handleRandomPT() {
+    this.clearFocus();
+    this.updateKeyPeriod(2);
     let newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
     while( newMessage === this.state.message ) {
       newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
@@ -463,6 +672,8 @@ class App extends React.Component {
   }
 
   handleRandomCT() {
+    this.clearFocus();
+    this.updateKeyPeriod(2);
     let newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
     while( newMessage === this.state.message ) {
       newMessage = RANDOM_PLAINTEXT[Math.floor(Math.random() * RANDOM_PLAINTEXT.length)];
@@ -482,6 +693,14 @@ class App extends React.Component {
     this.updateKey('');
   }
 
+  handleKeyPeriodPlus() {
+    this.updateKeyPeriod(this.state.keyArr.length + 1);
+  }
+
+  handleKeyPeriodMinus() {
+    this.updateKeyPeriod(this.state.keyArr.length - 1);
+  }
+
   /* ---------------- Break Page -------------- */
 
   handleToHome() {
@@ -489,9 +708,11 @@ class App extends React.Component {
         let newKey = getKeyFromGraph(this.state.tableFill);
         newKey = invertKey(newKey);
         this.updateKey(newKey);
+        this.updateKeyDisplay(newKey);
         this.updateMessage(decrypt(this.state.message, newKey));
     } else {
         this.updateKey('');
+        this.updateKeyPeriod(2);
     }
     this.updateHome(!this.state.home);
   }
@@ -541,6 +762,13 @@ class App extends React.Component {
               displayKey={this.state.displayKey}
               handleRandomPT={() => this.handleRandomPT()}
               handleRandomCT={() => this.handleRandomCT()}
+              activeRow={this.state.activeRow}
+              activeCol={this.state.activeCol}
+              handleKeyDisplayClick={(idx, isTop) => this.handleKeyDisplayClick(idx, isTop)}
+              keyArr={this.state.keyArr}
+              handlePeriodPlus={() => this.handleKeyPeriodPlus()}
+              handlePeriodMinus={() => this.handleKeyPeriodMinus()}
+              handleSelectMessage={() => this.clearFocus()}
             >
             </HomeGrid>
           </Box>
@@ -736,6 +964,11 @@ function calculateTable(period, message) {
  * @param {String} key 
  */
 function invalidKey(key) {
+  for(let i = 0; i < key.length; i++) {
+    if(!(ONE_CODE <= key.charCodeAt(i) && key.charCodeAt(i) <= NINE_CODE) ) {
+      return true;
+    }
+  }
   if(key.length > MAX_KEY_LEN) {
     return true;
   }
