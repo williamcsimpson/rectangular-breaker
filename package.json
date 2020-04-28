@@ -1,5 +1,6 @@
 {
   "name": "rectangular-breaker",
+  "homepage": "http://www.math.ucsd.edu/~math187a/ws/rectangular-breaker/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,7 +12,6 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-graph-vis": "^1.0.5",
-    "react-latex": "^1.6.0",
     "react-scripts": "3.4.1",
     "react-uuid": "^1.0.2",
     "styled-components": "^5.1.0",

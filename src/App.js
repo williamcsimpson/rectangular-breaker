@@ -7,12 +7,10 @@ import {
   Main,
   Text,
   TextArea,
-  TextInput,
   Table,
   TableRow,
   TableCell,
   TableBody,
-  defaultProps,
 } from 'grommet';
 import {
   Add,
@@ -453,6 +451,8 @@ class App extends React.Component {
     super(props);
 
     document.addEventListener('keyup', (event) => this.onKeyPress(event))
+    document.addEventListener('keypress', (event) => this.stopKeyBehavior(event))
+    document.addEventListener('keydown', (event) => this.stopKeyBehavior(event))
 
     this.state = {
       home: true,
@@ -602,7 +602,18 @@ class App extends React.Component {
 
   /* ---------------- Home Page --------------- */
 
+  stopKeyBehavior(event) {
+    if( (ONE_CODE <= event.which && event.which <= NINE_CODE) || event.which === DEL_CODE 
+        || event.which === BACKSPACE_CODE
+        || event.which === LEFT_ARROW_CODE
+        || event.which === RIGHT_ARROW_CODE) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
   onKeyPress(event) {
+    this.stopKeyBehavior(event);
     if(this.state.home) {
       if(this.state.activeRow >= 0 && this.state.activeCol >= 0 ) {
         if( ONE_CODE <= event.which && event.which <= NINE_CODE) {
